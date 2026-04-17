@@ -6,8 +6,10 @@ from typing import Optional
 
 try:
     from inference_sdk import InferenceHTTPClient
-except ImportError:
+    IMPORT_ERROR = None
+except ImportError as e:
     InferenceHTTPClient = None
+    IMPORT_ERROR = str(e)
 
 def get_db_connection():
     conn = sqlite3.connect("sign_language.db")
@@ -22,7 +24,7 @@ st.markdown("<p style='text-align: center; color: gray; font-size: 1.2rem;'>Seam
 st.divider()
 
 BASE_DIR = Path(__file__).resolve().parent
-IMAGE_DIR = BASE_DIR / "Static" 
+IMAGE_DIR = BASE_DIR / "static" / "images"
 ROBOFLOW_API_URL = "https://serverless.roboflow.com"
 ROBOFLOW_API_KEY = "uHq3AKnSX4ferar0SXnE"
 ROBOFLOW_MODEL_ID = "american-sign-language-v36cz/1"
@@ -100,7 +102,7 @@ def extract_predictions(result):
 def run_sign_to_text_inference(uploaded_file):
     if CLIENT is None:
         return {
-            "error": "Inference SDK not installed. Install it with: pip install inference-sdk"
+            "error": f"Inference SDK failed to load. Reason: {IMPORT_ERROR}. Try rebooting your Streamlit app."
         }
 
     suffix = Path(uploaded_file.name).suffix or ".jpg"

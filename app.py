@@ -22,7 +22,7 @@ st.markdown("<p style='text-align: center; color: gray; font-size: 1.2rem;'>Seam
 st.divider()
 
 BASE_DIR = Path(__file__).resolve().parent
-IMAGE_DIR = BASE_DIR / "static" 
+IMAGE_DIR = BASE_DIR / "Static" 
 ROBOFLOW_API_URL = "https://serverless.roboflow.com"
 ROBOFLOW_API_KEY = "uHq3AKnSX4ferar0SXnE"
 ROBOFLOW_MODEL_ID = "american-sign-language-v36cz/1"

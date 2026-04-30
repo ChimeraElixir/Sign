@@ -1,15 +1,9 @@
 import streamlit as st
+import requests
 import sqlite3
 import tempfile
 from pathlib import Path
 from typing import Optional
-
-try:
-    from inference_sdk import InferenceHTTPClient
-    IMPORT_ERROR = None
-except ImportError as e:
-    InferenceHTTPClient = None
-    IMPORT_ERROR = str(e)
 
 def get_db_connection():
     conn = sqlite3.connect("sign_language.db")
@@ -28,14 +22,6 @@ IMAGE_DIR = BASE_DIR / "Static"
 ROBOFLOW_API_URL = "https://serverless.roboflow.com"
 ROBOFLOW_API_KEY = "uHq3AKnSX4ferar0SXnE"
 ROBOFLOW_MODEL_ID = "american-sign-language-v36cz/1"
-
-if InferenceHTTPClient is not None:
-    CLIENT = InferenceHTTPClient(
-        api_url=ROBOFLOW_API_URL,
-        api_key=ROBOFLOW_API_KEY
-    )
-else:
-    CLIENT = None
 
 def get_prediction_list(result):
     """Handle multiple Roboflow response shapes and return a prediction list."""
@@ -100,18 +86,21 @@ def extract_predictions(result):
     return predictions
 
 def run_sign_to_text_inference(uploaded_file):
-    if CLIENT is None:
-        return {
-            "error": f"Inference SDK failed to load. Reason: {IMPORT_ERROR}. Try rebooting your Streamlit app."
-        }
-
     suffix = Path(uploaded_file.name).suffix or ".jpg"
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
         temp_file.write(uploaded_file.getbuffer())
         temp_path = temp_file.name
 
     try:
-        result = CLIENT.infer(temp_path, model_id=ROBOFLOW_MODEL_ID)
+        with open(temp_path, "rb") as image_file:
+            response = requests.post(
+                f"{ROBOFLOW_API_URL}/{ROBOFLOW_MODEL_ID}",
+                params={"api_key": ROBOFLOW_API_KEY},
+                files={"file": image_file},
+                timeout=60,
+            )
+        response.raise_for_status()
+        result = response.json()
         predictions = extract_predictions(result)
         all_labels = [pred["label"] for pred in predictions]
 
